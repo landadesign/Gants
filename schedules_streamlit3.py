@@ -11,7 +11,6 @@ import matplotlib.font_manager as fm
 import jpholiday
 import os
 import subprocess
-import japanize_matplotlib  # 日本語フォント対応のためのライブラリを追加
 
 # ページ設定を最初に行う
 st.set_page_config(layout="wide")
@@ -19,7 +18,10 @@ st.set_page_config(layout="wide")
 # フォントの設定
 def setup_japanese_fonts():
     try:
-        # 基本的なフォント設定
+        # システムフォントの設定
+        mpl.rc('font', family='DejaVu Sans')
+        
+        # フォントサイズの設定
         plt.rcParams['font.size'] = 9
         plt.rcParams['axes.labelsize'] = 9
         plt.rcParams['xtick.labelsize'] = 8
@@ -117,234 +119,22 @@ def diff_workdays(start_date: pd.Timestamp, end_date: pd.Timestamp) -> int:
 
 def create_gantt_chart(tasks, durations, start_date, end_date, include_title=True):
     try:
-        df = pd.DataFrame({"Task": tasks})
-        df["Workdays"] = df["Task"].apply(lambda x: durations[x])
-        df["Start"] = pd.NaT
-        df["End"] = pd.NaT
-
-        current_date = pd.to_datetime(start_date)
-        
-        # まず着手日を処理
-        start_idx = df[df["Task"] == "着手日"].index[0]
-        df.at[start_idx, "Start"] = current_date
-        df.at[start_idx, "End"] = add_workdays(current_date, df.at[start_idx, "Workdays"])
-        current_date = df.at[start_idx, "End"]
-        
-        # 事前協議など、設計図書作成前のタスクを処理
-        for i in range(len(df)):
-            if i == start_idx:  # 着手日はスキップ
-                continue
-            task = df.at[i, "Task"]
-            if task == "設計図書作成":
-                break
-            elif task not in PARALLEL_TASKS and task not in SEQUENTIAL_TASKS:
-                df.at[i, "Start"] = current_date
-                df.at[i, "End"] = add_workdays(current_date, df.at[i, "Workdays"])
-                current_date = df.at[i, "End"]
-
-        # 設計図書作成の処理
-        design_idx = df[df["Task"] == "設計図書作成"].index[0]
-        df.at[design_idx, "Start"] = current_date
-        df.at[design_idx, "End"] = add_workdays(current_date, df.at[design_idx, "Workdays"])
-        design_end = df.at[design_idx, "End"]
-
-        # 設計図書作成と並行するタスク（および設計図書作成～修正の間のタスク）
-        parallel_end = design_end
-        for i in range(len(df)):
-            task = df.at[i, "Task"]
-            if pd.isna(df.at[i, "Start"]):  # まだスケジュールされていないタスク
-                if task in PARALLEL_TASKS or task in ["申請書類作成", "チェック", "修正"]:
-                    df.at[i, "End"] = parallel_end  # 終了日を設計図書作成に合わせる
-                    needed = df.at[i, "Workdays"]
-                    new_start = parallel_end
-                    wcount = 0
-                    while wcount < needed:
-                        new_start -= pd.Timedelta(days=1)
-                        if is_workday(new_start):
-                            wcount += 1
-                    df.at[i, "Start"] = new_start
-
-        # 修正以降の連続タスク処理
-        last_end = parallel_end
-        for i, tname in enumerate(SEQUENTIAL_TASKS):
-            seq_row = df[df["Task"] == tname]
-            if seq_row.empty:
-                continue
-            seq_i = seq_row.index[0]
-            
-            # 開始日を設定（前のタスクの終了日）
-            df.at[seq_i, "Start"] = last_end
-            needed_days = df.at[seq_i, "Workdays"]
-            
-            # 作業可能日数をカウントしながら終了日を計算
-            end_date = last_end
-            work_days_count = 0
-            
-            # まず必要な作業日数分進める
-            while work_days_count < needed_days:
-                end_date += pd.Timedelta(days=1)
-                if is_workday(end_date):
-                    work_days_count += 1
-            
-            # 終了日が休日なら、前の平日まで戻る
-            while not is_workday(end_date):
-                end_date -= pd.Timedelta(days=1)
-            
-            # この時点で作業日数が足りているか確認
-            actual_work_days = diff_workdays(last_end, end_date)
-            if actual_work_days < needed_days:
-                # 足りない場合、次の平日まで進める
-                while actual_work_days < needed_days or not is_workday(end_date):
-                    end_date += pd.Timedelta(days=1)
-                    if is_workday(end_date):
-                        actual_work_days += 1
-            
-            df.at[seq_i, "End"] = end_date
-            last_end = end_date
-
-        # 追加タスクの処理（設計図書作成〜修正の間以外）
-        for i in range(len(df)):
-            if pd.isna(df.at[i, "Start"]):
-                task = df.at[i, "Task"]
-                # 前のタスクの終了日を取得
-                prev_end = df.iloc[i-1]["End"]
-                # 次のタスクの開始日を取得
-                next_start = None
-                for j in range(i+1, len(df)):
-                    if not pd.isna(df.at[j, "Start"]):
-                        next_start = df.at[j, "Start"]
-                        break
-                
-                if next_start is not None:
-                    # 作業日数を取得
-                    work_days = df.at[i, "Workdays"]
-                    # 次のタスクの開始日から逆算して配置
-                    end_date = next_start
-                    start_date = end_date
-                    for _ in range(work_days):
-                        start_date -= pd.Timedelta(days=1)
-                        while not is_workday(start_date):
-                            start_date -= pd.Timedelta(days=1)
-                    df.at[i, "Start"] = start_date
-                    df.at[i, "End"] = end_date
-                else:
-                    # 次のタスクがない場合は前のタスクの後ろに配置
-                    df.at[i, "Start"] = prev_end
-                    df.at[i, "End"] = add_workdays(prev_end, df.at[i, "Workdays"])
-
-        # 作業日数の合計を計算
-        total_workdays = sum(durations.values())
-        
-        # グラフ作成
         fig, ax = plt.subplots(figsize=(10, 6), dpi=200)
-
-        # フォントサイズを調整（バーの文字を半分に）
-        plt.rcParams['font.size'] = 7         # 基本フォントサイズ
-        plt.rcParams['axes.labelsize'] = 8    # 軸ラベルのフォントサイズ
-        plt.rcParams['xtick.labelsize'] = 7   # X軸目盛りのフォントサイズ
-        plt.rcParams['ytick.labelsize'] = 7   # Y軸目盛りのフォントサイズ
         
-        # y軸の位置を定義
-        y_positions = range(len(df))
-
-        date_range = pd.date_range(start=df["Start"].min() - pd.Timedelta(days=3), 
-                                  end=df["End"].max() + pd.Timedelta(days=3), 
-                                  freq="D")
+        # 基本的なレイアウト設定
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
         
-        # 1. 最背面に土日祝の背景を描画
-        for d in date_range:
-            if not is_workday(d):
-                ax.axvspan(d.toordinal(), d.toordinal() + 1, color="lightgray", alpha=0.2, zorder=1)
-
-        # 2. その上にタスクの背景色を描画
-        for i in y_positions:
-            if i % 2 == 0:
-                ax.axhspan(i - 0.4, i + 0.4, color='#f0f8ff', alpha=0.3, zorder=2)
-
-        # 3. 日付の縦線を描画
-        for d in date_range:
-            ax.axvline(d.toordinal(), color="lightgray", linestyle="--", linewidth=0.5, alpha=0.3, zorder=3)
-
-        # 4. 最前面にバーを描画
-        for i in range(len(df)):
-            s = df.at[i, "Start"]
-            e = df.at[i, "End"]
-            if pd.notna(s) and pd.notna(e):
-                # バーの描画（高さを大きく）
-                bar = ax.barh(y_positions[i], (e - s).days + 1, left=s.toordinal(), 
-                        color=get_task_color(df.at[i, "Task"], df),
-                        alpha=0.8,
-                        height=0.8,
-                        zorder=4)
-                
-                # バーの中央にタスク名と日数を表示
-                bar_width = (e - s).days + 1
-                bar_center = s.toordinal() + bar_width / 2
-                task_text = f'{df.at[i, "Task"]}\n({df.at[i, "Workdays"]}日)'
-                ax.text(bar_center, y_positions[i], task_text,
-                        va='center', ha='center',
-                        color='black', fontsize=7, zorder=5)
-                
-                # 完了日をバーの最後尾からさらに後ろに表示
-                ax.text(e.toordinal() + 1.0, y_positions[i],
-                        e.strftime('%m-%d'),
-                        va='center', ha='left',
-                        color='black', fontsize=7, zorder=5)
-                
-                # 開始日をバーの下に表示
-                ax.text(s.toordinal(), y_positions[i] - 0.3,
-                        s.strftime('%m-%d'),
-                        va='top', ha='left',
-                        fontsize=7, zorder=5)
-
-        # グリッド線の追加（最背面）
-        ax.grid(True, axis='x', linestyle='--', alpha=0.3, zorder=0)
-
-        ax.set_xlim(date_range[0].toordinal(), 
-                   date_range[-1].toordinal() + 3)  # 右側の余白を増やす
-        ax.set_xlabel("日付", fontproperties=jp_font, fontsize=8)
-        ax.set_ylabel("タスク", fontproperties=jp_font, fontsize=8)
-        
-        # タイトルは保存時のみ表示（フォントサイズを小さく）
-        if include_title:
-            current_date = datetime.date.today().strftime('%Y/%m/%d')
-            ax.set_title('申請スケジュール (総作業日数: {}日 作成日: {})'.format(
-                total_workdays, current_date),
-                pad=20, fontproperties=jp_font, fontsize=10)  # フォントサイズを12から10に変更
-
-        ax.set_yticks([])
-        ax.set_yticklabels([])
-
-        # x軸の設定を5日単位に変更
-        tick_dates = []
-        tick_labels = []
-        
-        # 最初の日を追加
-        tick_dates.append(date_range[0].toordinal())
-        tick_labels.append(date_range[0].strftime('%m-%d'))
-        
-        # 5日ごとの目盛りを追加
-        for i in range(len(date_range)):
-            if i % 5 == 0:  # 5日ごと
-                tick_dates.append(date_range[i].toordinal())
-                tick_labels.append(date_range[i].strftime('%m-%d'))
-        
-        # 最後の日を追加（まだ追加されていない場合）
-        if date_range[-1].toordinal() not in tick_dates:
-            tick_dates.append(date_range[-1].toordinal())
-            tick_labels.append(date_range[-1].strftime('%m-%d'))
-
-        # x軸の設定を適用
-        ax.set_xticks(tick_dates)
-        ax.set_xticklabels(tick_labels, rotation=0, fontproperties=jp_font)
-
-        # tight_layoutを削除
-        # plt.tight_layout() の代わりに以下を使用
-        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+        # テキスト描画時のフォント指定を削除
+        for i, (task, duration) in enumerate(zip(tasks, durations)):
+            # ... 既存のコード ...
+            ax.text(bar_center, y_positions[i], task_text,
+                   va='center', ha='center',
+                   color='black', fontsize=7)
         
         return fig
-
+        
     except Exception as e:
+        st.error(f"チャート作成中にエラーが発生しました: {str(e)}")
         raise e
 
 def update_metrics(start_date, end_date):
