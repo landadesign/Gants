@@ -125,12 +125,48 @@ def create_gantt_chart(tasks, durations, start_date, end_date, include_title=Tru
         # 基本的なレイアウト設定
         plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
         
-        # テキスト描画時のフォント指定を削除
-        for i, (task, duration) in enumerate(zip(tasks, durations)):
-            # ... 既存のコード ...
+        # Y軸の位置を設定
+        y_positions = range(len(tasks))
+        
+        # 開始日から終了日までの作業日数を計算
+        current_date = pd.to_datetime(start_date)
+        total_days = []
+        current_position = 0
+        
+        for task in tasks:
+            duration = durations[task]
+            end = add_workdays(current_date, duration)
+            total_days.append((current_position, duration))
+            current_position += duration
+        
+        # バーを描画
+        for i, (task, (start_pos, duration)) in enumerate(zip(tasks, total_days)):
+            # バーの色を取得
+            color = get_task_color(task, pd.DataFrame({'Task': tasks}))
+            
+            # バーを描画
+            ax.barh(y_positions[i], duration, left=start_pos, height=0.3,
+                   color=color, alpha=0.8)
+            
+            # タスク名とデュレーションを表示
+            task_text = f"{task}\n({duration}日)"
+            bar_center = start_pos + duration / 2
+            
+            # テキストを描画
             ax.text(bar_center, y_positions[i], task_text,
                    va='center', ha='center',
                    color='black', fontsize=7)
+        
+        # 軸の設定
+        ax.set_yticks([])  # Y軸の目盛りを非表示
+        ax.set_xlabel('作業日数')
+        
+        # グリッドの設定
+        ax.grid(True, axis='x', linestyle='--', alpha=0.7)
+        
+        # タイトルを追加（オプション）
+        if include_title:
+            plt.title('作業工程表', pad=20)
         
         return fig
         
