@@ -60,7 +60,7 @@ else:
     jp_font = fm.FontProperties(family='MS Gothic', size=7)
 
 # フォントの設定をmatplotlibのデフォルトに設定
-plt.rcParams['font.family'] = 'IPAexGothic'  # または 'Noto Sans CJK JP'
+plt.rcParams['font.family'] = 'IPAexGothic'
 
 # ======== タスクの並行/連続をどう扱うか設定 ========
 PARALLEL_TASKS = ["構造計算", "省エネ計算", "申請書類作成", "チェック", "修正"]
