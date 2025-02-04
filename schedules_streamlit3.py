@@ -15,29 +15,20 @@ import subprocess
 # ページ設定を最初に行う
 st.set_page_config(layout="wide")
 
-# matplotlibの設定を変更
-mpl.rcParams['font.family'] = ['Noto Sans CJK JP', 'IPAexGothic', 'sans-serif']
-mpl.rcParams['axes.unicode_minus'] = False
-mpl.rcParams['font.size'] = 7
-
-# フォールバックフォントの設定
-plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
-
-# フォントの設定を変更
-mpl.rcParams['font.family'] = 'sans-serif'
-mpl.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
-
-# フォントのインストール（Streamlit Cloud用）
+# フォントの設定
 def setup_japanese_fonts():
     try:
-        # matplotlibのフォント設定
-        mpl.rcParams['font.family'] = 'sans-serif'
-        mpl.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
-        mpl.rcParams['axes.unicode_minus'] = False
+        # シンプルなフォント設定
+        plt.rcParams['font.family'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans', 'sans-serif']
+        plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
+        plt.rcParams['axes.unicode_minus'] = False
         
-        # キャッシュのクリア
-        mpl.font_manager.fontManager.ttflist = []
-        mpl.font_manager._load_fontmanager()
+        # フォントサイズの調整
+        plt.rcParams['font.size'] = 9
+        plt.rcParams['axes.labelsize'] = 9
+        plt.rcParams['xtick.labelsize'] = 8
+        plt.rcParams['ytick.labelsize'] = 8
+        
     except Exception as e:
         st.warning(f"フォント設定中にエラーが発生しました: {str(e)}")
 
@@ -128,7 +119,7 @@ def diff_workdays(start_date: pd.Timestamp, end_date: pd.Timestamp) -> int:
             wcount += 1
     return wcount
 
-def create_gantt_chart(tasks, durations, start_date, end_date, include_title=False):
+def create_gantt_chart(tasks, durations, start_date, end_date, include_title=True):
     try:
         df = pd.DataFrame({"Task": tasks})
         df["Workdays"] = df["Task"].apply(lambda x: durations[x])
@@ -351,7 +342,9 @@ def create_gantt_chart(tasks, durations, start_date, end_date, include_title=Fal
         ax.set_xticks(tick_dates)
         ax.set_xticklabels(tick_labels, rotation=0, fontproperties=jp_font)
 
-        plt.tight_layout()
+        # tight_layoutを削除
+        # plt.tight_layout() の代わりに以下を使用
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
         
         return fig
 
