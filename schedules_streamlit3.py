@@ -12,6 +12,14 @@ import jpholiday
 import os
 import subprocess
 
+# matplotlibの設定を変更
+mpl.rcParams['font.family'] = ['Noto Sans CJK JP', 'IPAexGothic', 'sans-serif']
+mpl.rcParams['axes.unicode_minus'] = False
+mpl.rcParams['font.size'] = 7
+
+# フォールバックフォントの設定
+plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
+
 # フォントのインストール（Streamlit Cloud用）
 def setup_japanese_fonts():
     try:
