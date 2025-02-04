@@ -9,45 +9,33 @@ import time
 import plotly.graph_objects as go
 import matplotlib.font_manager as fm
 import jpholiday
+import os
+import subprocess
 
-# 基本作業日数の定義
-min_durations = {
-    "着手日": 1,
-    "設計図書作成": 10,
-    "構造計算": 5,
-    "省エネ計算": 3,
-    "申請書類作成": 3,
-    "チェック": 2,
-    "修正": 2,
-    "提出": 1,
-    "事前審査": 7,
-    "訂正": 3,
-    "最終審査": 7,
-    "申請済予定": 1
-}
+# フォントのインストール（Streamlit Cloud用）
+def setup_japanese_fonts():
+    try:
+        # フォントのインストール
+        os.system('apt-get install -y fonts-noto-cjk')
+        
+        # フォントキャッシュの更新
+        os.system('fc-cache -fv')
+        
+        # matplotlibのキャッシュクリア
+        subprocess.run(['rm', '-rf', os.path.expanduser('~/.cache/matplotlib')])
+        
+        # フォント設定
+        plt.rcParams['font.family'] = 'Noto Sans CJK JP'
+    except:
+        # エラーが発生した場合はデフォルトフォントを使用
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
 
-# タスクの順序を定義
-tasks = [
-    "着手日",
-    "設計図書作成",
-    "構造計算",
-    "省エネ計算",
-    "申請書類作成",
-    "チェック",
-    "修正",
-    "提出",
-    "事前審査",
-    "訂正",
-    "最終審査",
-    "申請済予定"
-]
-
-# 基本フォントの設定
-plt.rcParams['font.family'] = 'IPAexGothic'  # 基本フォント
-plt.rcParams['font.size'] = 7  # 基本フォントサイズ
+# フォントのセットアップを実行
+setup_japanese_fonts()
 
 # フォントプロパティの設定
-jp_font = mpl.font_manager.FontProperties(family='IPAexGothic', size=7)
+jp_font = mpl.font_manager.FontProperties(family='Noto Sans CJK JP')
 
 # ======== ヒラギノ角ゴシックの設定 (Hiragino Sans) ========
 jp_font_path = None
