@@ -20,24 +20,21 @@ mpl.rcParams['font.size'] = 7
 # フォールバックフォントの設定
 plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
 
+# フォントの設定を変更
+mpl.rcParams['font.family'] = 'sans-serif'
+mpl.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
+
 # フォントのインストール（Streamlit Cloud用）
 def setup_japanese_fonts():
     try:
-        # フォントのインストール
-        os.system('apt-get install -y fonts-noto-cjk')
-        
-        # フォントキャッシュの更新
-        os.system('fc-cache -fv')
-        
-        # matplotlibのキャッシュクリア
-        subprocess.run(['rm', '-rf', os.path.expanduser('~/.cache/matplotlib')])
+        # matplotlibのキャッシュクリアのみ実行
+        fm._rebuild()
         
         # フォント設定
-        plt.rcParams['font.family'] = 'Noto Sans CJK JP'
-    except:
-        # エラーが発生した場合はデフォルトフォントを使用
         plt.rcParams['font.family'] = 'sans-serif'
-        plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
+        plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
+    except Exception as e:
+        st.warning(f"フォント設定中にエラーが発生しました: {str(e)}")
 
 # フォントのセットアップを実行
 setup_japanese_fonts()
