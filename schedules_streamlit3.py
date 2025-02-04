@@ -42,8 +42,23 @@ tasks = [
     "申請済予定"
 ]
 
-# ======== 文字サイズを一括指定 (例: 7pt) ========
+# フォントの設定
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['Hiragino Sans', 'Yu Gothic', 'Meiryo', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+
+# 基本フォントサイズの設定
 mpl.rcParams["font.size"] = 7
+
+# フォールバック用の日本語フォント設定
+def get_jp_font():
+    font_list = ['Hiragino Sans', 'Yu Gothic', 'Meiryo', 'IPAexGothic', 'IPAPGothic', 'VL PGothic', 'Noto Sans CJK JP']
+    for font in font_list:
+        if any(f for f in mpl.font_manager.findSystemFonts() if font in f):
+            return mpl.font_manager.FontProperties(family=font)
+    return mpl.font_manager.FontProperties(family='sans-serif')
+
+# フォントプロパティを取得
+jp_font = get_jp_font()
 
 # ======== ヒラギノ角ゴシックの設定 (Hiragino Sans) ========
 jp_font_path = None
