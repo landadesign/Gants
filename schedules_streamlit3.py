@@ -8,6 +8,7 @@ import io
 import time
 import plotly.graph_objects as go
 import matplotlib.font_manager as fm
+import jpholiday
 
 # 基本作業日数の定義
 min_durations = {
