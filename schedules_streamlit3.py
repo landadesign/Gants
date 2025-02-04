@@ -1,14 +1,15 @@
 import streamlit as st
 import pandas as pd
-import matplotlib as mpl
+import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.dates import DateFormatter
-import matplotlib.font_manager as fm
+import matplotlib as mpl
+import japanize_matplotlib
 import jpholiday
 import datetime
 import io
 import time
 import plotly.graph_objects as go
+import matplotlib.font_manager as fm
 
 # 基本作業日数の定義
 min_durations = {
