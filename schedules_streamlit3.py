@@ -18,8 +18,9 @@ st.set_page_config(layout="wide")
 # フォントの設定
 def setup_japanese_fonts():
     try:
-        # システムフォントの設定
-        mpl.rc('font', family='DejaVu Sans')
+        # 基本的なフォント設定
+        plt.rcParams['font.family'] = 'IPAGothic'  # IPAGothicを使用
+        plt.rcParams['axes.unicode_minus'] = False  # マイナス記号の文字化け防止
         
         # フォントサイズの設定
         plt.rcParams['font.size'] = 9
