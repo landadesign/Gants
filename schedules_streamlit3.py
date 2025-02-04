@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-import japanize_matplotlib
-import jpholiday
 import datetime
 import io
 import time
