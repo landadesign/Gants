@@ -11,6 +11,7 @@ import matplotlib.font_manager as fm
 import jpholiday
 import os
 import subprocess
+import japanize_matplotlib  # 日本語フォント対応のためのライブラリを追加
 
 # ページ設定を最初に行う
 st.set_page_config(layout="wide")
@@ -18,12 +19,7 @@ st.set_page_config(layout="wide")
 # フォントの設定
 def setup_japanese_fonts():
     try:
-        # シンプルなフォント設定
-        plt.rcParams['font.family'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans', 'sans-serif']
-        plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
-        plt.rcParams['axes.unicode_minus'] = False
-        
-        # フォントサイズの調整
+        # 基本的なフォント設定
         plt.rcParams['font.size'] = 9
         plt.rcParams['axes.labelsize'] = 9
         plt.rcParams['xtick.labelsize'] = 8
@@ -286,19 +282,19 @@ def create_gantt_chart(tasks, durations, start_date, end_date, include_title=Tru
                 bar_center = s.toordinal() + bar_width / 2
                 task_text = f'{df.at[i, "Task"]}\n({df.at[i, "Workdays"]}日)'
                 ax.text(bar_center, y_positions[i], task_text,
-                        va='center', ha='center', fontproperties=jp_font,
+                        va='center', ha='center',
                         color='black', fontsize=7, zorder=5)
                 
                 # 完了日をバーの最後尾からさらに後ろに表示
                 ax.text(e.toordinal() + 1.0, y_positions[i],
                         e.strftime('%m-%d'),
-                        va='center', ha='left', fontproperties=jp_font,
+                        va='center', ha='left',
                         color='black', fontsize=7, zorder=5)
                 
                 # 開始日をバーの下に表示
                 ax.text(s.toordinal(), y_positions[i] - 0.3,
                         s.strftime('%m-%d'),
-                        va='top', ha='left', fontproperties=jp_font,
+                        va='top', ha='left',
                         fontsize=7, zorder=5)
 
         # グリッド線の追加（最背面）

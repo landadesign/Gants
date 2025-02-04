@@ -4,3 +4,4 @@ matplotlib==3.8.2
 numpy==1.26.3
 plotly==5.18.0
 jpholiday==0.1.8
+japanize-matplotlib==1.1.3
