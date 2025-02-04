@@ -242,10 +242,10 @@ def create_gantt_chart(tasks, durations, start_date, end_date, include_title=Fal
         fig, ax = plt.subplots(figsize=(10, 6), dpi=200)
 
         # フォントサイズを調整（バーの文字を半分に）
-        plt.rcParams['font.size'] = 5         # 基本フォントサイズ
-        plt.rcParams['axes.labelsize'] = 10   # 軸ラベルのフォントサイズ
-        plt.rcParams['xtick.labelsize'] = 10  # X軸目盛りのフォントサイズ
-        plt.rcParams['ytick.labelsize'] = 10  # Y軸目盛りのフォントサイズ
+        plt.rcParams['font.size'] = 7         # 基本フォントサイズ
+        plt.rcParams['axes.labelsize'] = 8    # 軸ラベルのフォントサイズ
+        plt.rcParams['xtick.labelsize'] = 7   # X軸目盛りのフォントサイズ
+        plt.rcParams['ytick.labelsize'] = 7   # Y軸目盛りのフォントサイズ
         
         # y軸の位置を定義
         y_positions = range(len(df))
@@ -286,27 +286,27 @@ def create_gantt_chart(tasks, durations, start_date, end_date, include_title=Fal
                 task_text = f'{df.at[i, "Task"]}\n({df.at[i, "Workdays"]}日)'
                 ax.text(bar_center, y_positions[i], task_text,
                         va='center', ha='center', fontproperties=jp_font,
-                        color='black', fontsize=5, zorder=5)
+                        color='black', fontsize=7, zorder=5)
                 
                 # 完了日をバーの最後尾からさらに後ろに表示
                 ax.text(e.toordinal() + 1.0, y_positions[i],
                         e.strftime('%m-%d'),
                         va='center', ha='left', fontproperties=jp_font,
-                        color='black', fontsize=5, zorder=5)
+                        color='black', fontsize=7, zorder=5)
                 
                 # 開始日をバーの下に表示
                 ax.text(s.toordinal(), y_positions[i] - 0.3,
                         s.strftime('%m-%d'),
                         va='top', ha='left', fontproperties=jp_font,
-                        fontsize=5, zorder=5)
+                        fontsize=7, zorder=5)
 
         # グリッド線の追加（最背面）
         ax.grid(True, axis='x', linestyle='--', alpha=0.3, zorder=0)
 
         ax.set_xlim(date_range[0].toordinal(), 
                    date_range[-1].toordinal() + 3)  # 右側の余白を増やす
-        ax.set_xlabel("日付", fontproperties=jp_font)
-        ax.set_ylabel("タスク", fontproperties=jp_font)
+        ax.set_xlabel("日付", fontproperties=jp_font, fontsize=8)
+        ax.set_ylabel("タスク", fontproperties=jp_font, fontsize=8)
         
         # タイトルは保存時のみ表示（フォントサイズを小さく）
         if include_title:
