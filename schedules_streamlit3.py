@@ -12,6 +12,9 @@ import jpholiday
 import os
 import subprocess
 
+# ページ設定を最初に行う
+st.set_page_config(layout="wide")
+
 # matplotlibの設定を変更
 mpl.rcParams['font.family'] = ['Noto Sans CJK JP', 'IPAexGothic', 'sans-serif']
 mpl.rcParams['axes.unicode_minus'] = False
@@ -27,12 +30,14 @@ mpl.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sa
 # フォントのインストール（Streamlit Cloud用）
 def setup_japanese_fonts():
     try:
-        # matplotlibのキャッシュクリアのみ実行
-        fm._rebuild()
+        # matplotlibのフォント設定
+        mpl.rcParams['font.family'] = 'sans-serif'
+        mpl.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
+        mpl.rcParams['axes.unicode_minus'] = False
         
-        # フォント設定
-        plt.rcParams['font.family'] = 'sans-serif'
-        plt.rcParams['font.sans-serif'] = ['Noto Sans CJK JP', 'IPAexGothic', 'DejaVu Sans']
+        # キャッシュのクリア
+        mpl.font_manager.fontManager.ttflist = []
+        mpl.font_manager._load_fontmanager()
     except Exception as e:
         st.warning(f"フォント設定中にエラーが発生しました: {str(e)}")
 
@@ -368,9 +373,7 @@ def update_metrics(start_date, end_date):
     }
 
 def main():
-    # レイアウトを最大幅に設定
-    st.set_page_config(layout="wide")
-
+    setup_japanese_fonts()
     # 日付の初期化
     today = datetime.date.today()
     default_end = today + datetime.timedelta(days=60)
